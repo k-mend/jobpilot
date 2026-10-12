@@ -18,9 +18,6 @@ permissions:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: jobpilot
     steps:
       - uses: actions/checkout@v4
 
@@ -37,8 +34,8 @@ jobs:
       - name: Restore database (if present on data branch)
         run: |
           git fetch origin data || true
-          if git cat-file -e origin/data:jobpilot/jobpilot.db 2>/dev/null; then
-            git show origin/data:jobpilot/jobpilot.db > jobpilot.db
+          if git cat-file -e origin/data:jobpilot.db 2>/dev/null; then
+            git show origin/data:jobpilot.db > jobpilot.db
             echo "Restored jobpilot.db from data branch."
           else
             echo "No existing database; a fresh one will be created."
@@ -84,9 +81,8 @@ jobs:
         run: |
           git config user.name "jobpilot-bot"
           git config user.email "jobpilot-bot@users.noreply.github.com"
-          # Work on an orphan-ish 'data' branch that only carries the DB.
+          # Keep only the DB file on a dedicated 'data' branch.
           cp jobpilot.db /tmp/jobpilot.db
-          cd "${GITHUB_WORKSPACE}"
           git fetch origin data || true
           if git rev-parse --verify origin/data >/dev/null 2>&1; then
             git checkout -B data origin/data
@@ -94,8 +90,7 @@ jobs:
             git checkout --orphan data
             git rm -rf . >/dev/null 2>&1 || true
           fi
-          mkdir -p jobpilot
-          cp /tmp/jobpilot.db jobpilot/jobpilot.db
-          git add -f jobpilot/jobpilot.db
+          cp /tmp/jobpilot.db jobpilot.db
+          git add -f jobpilot.db
           git commit -m "chore: update scan database [skip ci]" || echo "No changes."
           git push origin data
