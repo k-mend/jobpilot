@@ -51,6 +51,17 @@ your CV and cover letter per job → queue them for one-click review** — all r
 
 Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Documentation
+
+- [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md) — **step-by-step tutorial to build a
+  project like this from scratch**, in the order it was built, with the decisions and
+  pitfalls called out. Start here if you want to follow along.
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — local setup, running, tests, project
+  map, how to add a job source.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how the pieces fit together.
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — the $0-forever strategy.
+- [`docs/LEGAL.md`](docs/LEGAL.md) — LinkedIn/ToS stance and why it's review-based.
+
 ## $0-forever strategy
 
 | Need        | Free solution                                                        |
