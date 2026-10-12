@@ -1,5 +1,9 @@
 # JobPilot
 
+**🔴 Live:** https://jobpilot-cv39.onrender.com — describe a job and search (no login).
+*(Free Render tier: the first visit after ~15 min idle may take ~30–60s to wake. See
+[`docs/LIVE_APP_GUIDE.md`](docs/LIVE_APP_GUIDE.md).)*
+
 A free, multi-user job-scanning + CV-tailoring + application-queue platform.
 Inspired by [hiring.cafe](https://hiringcafe.com/) — but it adds the loop hiring.cafe
 doesn't give you: **describe a job in plain English → get matched real jobs → auto-tailor
@@ -62,6 +66,10 @@ Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — the $0-forever strategy.
 - [`docs/DEPLOY_LIVE.md`](docs/DEPLOY_LIVE.md) — **publish a live, shareable URL for
   free** (Render or Hugging Face Spaces), step by step.
+- [`docs/LIVE_APP_GUIDE.md`](docs/LIVE_APP_GUIDE.md) — **your live app's quirks (sleep,
+  data resets) and the keep-alive cron**, explained for beginners.
+- [`docs/LLM_PROVIDERS.md`](docs/LLM_PROVIDERS.md) — **OpenRouter vs Gemini** (both free),
+  how to set keys, which one is active.
 - [`docs/LEGAL.md`](docs/LEGAL.md) — LinkedIn/ToS stance and why it's review-based.
 
 ## $0-forever strategy

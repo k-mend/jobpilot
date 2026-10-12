@@ -1,8 +1,12 @@
 """LLM provider abstraction.
 
-With GEMINI_API_KEY set, `complete()` calls the Gemini REST API (free tier).
-Without a key it returns None so callers use their deterministic template fallback.
-This keeps JobPilot 100% free by default and better with a key.
+`complete(prompt)` routes to whichever provider is configured:
+  1. OpenRouter  (if OPENROUTER_API_KEY is set) — has genuinely free models.
+  2. Gemini      (if GEMINI_API_KEY is set)      — free tier available.
+  3. Neither     -> returns None, so callers use their deterministic template.
+
+This keeps JobPilot 100% free by default and better with a (free) key.
+Any failure (quota, network, bad key) degrades gracefully to None.
 """
 from __future__ import annotations
 
@@ -15,6 +19,7 @@ from app.config import get_settings
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 )
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 def llm_available() -> bool:
@@ -22,10 +27,47 @@ def llm_available() -> bool:
 
 
 def complete(prompt: str, max_output_tokens: int = 1024) -> Optional[str]:
-    """Return LLM text, or None if no provider is configured / call fails."""
+    """Return LLM text, or None if no provider is configured / the call fails."""
     settings = get_settings()
-    if not settings.gemini_api_key:
+    provider = settings.active_provider
+    if provider == "openrouter":
+        return _complete_openrouter(prompt, max_output_tokens)
+    if provider == "gemini":
+        return _complete_gemini(prompt, max_output_tokens)
+    return None
+
+
+def _complete_openrouter(prompt: str, max_output_tokens: int) -> Optional[str]:
+    settings = get_settings()
+    headers = {
+        "Authorization": f"Bearer {settings.openrouter_api_key}",
+        "Content-Type": "application/json",
+        # Optional attribution headers recommended by OpenRouter.
+        "HTTP-Referer": "https://github.com/k-mend/jobpilot",
+        "X-Title": "JobPilot",
+    }
+    payload = {
+        "model": settings.openrouter_model,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": max_output_tokens,
+        "temperature": 0.4,
+    }
+    try:
+        with httpx.Client(timeout=httpx.Timeout(60.0)) as client:
+            resp = client.post(OPENROUTER_URL, headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+        choices = data.get("choices", [])
+        if not choices:
+            return None
+        text = (choices[0].get("message", {}).get("content") or "").strip()
+        return text or None
+    except Exception:
         return None
+
+
+def _complete_gemini(prompt: str, max_output_tokens: int) -> Optional[str]:
+    settings = get_settings()
     url = GEMINI_URL.format(model=settings.gemini_model)
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -34,9 +76,7 @@ def complete(prompt: str, max_output_tokens: int = 1024) -> Optional[str]:
     try:
         with httpx.Client(timeout=httpx.Timeout(45.0)) as client:
             resp = client.post(
-                url,
-                params={"key": settings.gemini_api_key},
-                json=payload,
+                url, params={"key": settings.gemini_api_key}, json=payload
             )
             resp.raise_for_status()
             data = resp.json()
@@ -47,5 +87,4 @@ def complete(prompt: str, max_output_tokens: int = 1024) -> Optional[str]:
         text = "".join(p.get("text", "") for p in parts).strip()
         return text or None
     except Exception:
-        # Any failure (quota, network) degrades gracefully to the template path.
         return None

@@ -11,7 +11,10 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # Optional: set in the Render dashboard to enable AI tailoring.
+      # Optional LLM keys — set in the Render dashboard to enable AI tailoring.
+      # Provider priority: OpenRouter first, then Gemini.
+      - key: OPENROUTER_API_KEY
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       # SQLite lives on the container's ephemeral disk (resets on redeploy).

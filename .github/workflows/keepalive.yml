@@ -1,0 +1,29 @@
+name: Keep Render app awake
+
+# Render's free tier sleeps apps after ~15 min idle. This pings the health
+# endpoint every ~10 minutes so the first real visitor doesn't wait for a wake-up.
+# Note: GitHub cron is UTC, minimum interval 5 min, and runs may be delayed when
+# GitHub is busy — that's fine for keep-alive.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          url="https://jobpilot-cv39.onrender.com/api/health"
+          echo "Pinging $url"
+          # --max-time generous because a sleeping app can take ~60s to wake.
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$url" || echo "000")
+          echo "HTTP $code"
+          # Don't fail the workflow on a transient hiccup; keep-alive is best-effort.
+          if [ "$code" = "200" ]; then
+            echo "App is awake."
+          else
+            echo "Non-200 ($code) — will try again next schedule."
+          fi

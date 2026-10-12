@@ -14,8 +14,13 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # LLM (optional). No key => free template fallback.
+    # Provider is auto-selected: OpenRouter if its key is set, else Gemini.
     gemini_api_key: Optional[str] = None
     gemini_model: str = "gemini-1.5-flash"
+
+    # OpenRouter (optional). Has genuinely free models (see docs/LLM_PROVIDERS.md).
+    openrouter_api_key: Optional[str] = None
+    openrouter_model: str = "meta-llama/llama-3.1-8b-instruct:free"
 
     # Database
     database_url: str = "sqlite:///jobpilot.db"
@@ -49,7 +54,16 @@ class Settings(BaseSettings):
 
     @property
     def llm_enabled(self) -> bool:
-        return bool(self.gemini_api_key)
+        return bool(self.openrouter_api_key or self.gemini_api_key)
+
+    @property
+    def active_provider(self) -> Optional[str]:
+        """Which LLM provider will be used, if any. OpenRouter takes priority."""
+        if self.openrouter_api_key:
+            return "openrouter"
+        if self.gemini_api_key:
+            return "gemini"
+        return None
 
 
 @lru_cache
