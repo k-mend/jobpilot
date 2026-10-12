@@ -60,6 +60,8 @@ Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
   map, how to add a job source.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how the pieces fit together.
 - [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — the $0-forever strategy.
+- [`docs/DEPLOY_LIVE.md`](docs/DEPLOY_LIVE.md) — **publish a live, shareable URL for
+  free** (Render or Hugging Face Spaces), step by step.
 - [`docs/LEGAL.md`](docs/LEGAL.md) — LinkedIn/ToS stance and why it's review-based.
 
 ## $0-forever strategy

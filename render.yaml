@@ -1,0 +1,20 @@
+# Render Blueprint — deploy JobPilot as a free web service.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: jobpilot
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # Optional: set in the Render dashboard to enable AI tailoring.
+      - key: GEMINI_API_KEY
+        sync: false
+      # SQLite lives on the container's ephemeral disk (resets on redeploy).
+      # That's fine: searches re-scan live job boards each time.
+      - key: DATABASE_URL
+        value: "sqlite:///jobpilot.db"
