@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Your CV — JobPilot{% endblock %}
+{% block content %}
+<h1>Upload your CV</h1>
+<p class="sub">PDF, DOCX, Markdown, or text. We extract your skills to improve matching
+   and to tailor applications.</p>
+
+<form class="search" action="/cv" method="post" enctype="multipart/form-data">
+  <input type="email" name="email" placeholder="your email" required>
+  <input type="file" name="file" accept=".pdf,.docx,.md,.txt" required>
+  <button type="submit">Upload & parse</button>
+</form>
+
+{% if result %}
+<section class="parsed">
+  <h2>Parsed: {{ result.filename }}</h2>
+  <p><strong>Email:</strong> {{ result.email }}</p>
+  <p><strong>Years experience:</strong> {{ result.years_experience or "—" }}</p>
+  <p><strong>Skills detected:</strong></p>
+  <div class="tags">
+    {% for s in result.skills %}<span class="tag">{{ s }}</span>{% endfor %}
+    {% if not result.skills %}<em>none detected</em>{% endif %}
+  </div>
+  {% if result.titles %}
+  <p><strong>Experience lines:</strong></p>
+  <ul>{% for t in result.titles %}<li>{{ t }}</li>{% endfor %}</ul>
+  {% endif %}
+  <a class="back" href="/">← search jobs with this CV</a>
+</section>
+{% endif %}
+{% endblock %}

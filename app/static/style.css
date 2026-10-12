@@ -1,0 +1,80 @@
+:root {
+  --bg: #0f1222; --panel: #181c33; --panel2: #202545;
+  --fg: #e8eaf5; --muted: #9aa0bd; --accent: #6c7bff;
+  --good: #3ddc97; --tag: #2a2f52;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg); color: var(--fg); line-height: 1.5;
+}
+.topbar {
+  display: flex; align-items: center; gap: 1.5rem; padding: 0.9rem 1.5rem;
+  background: var(--panel); border-bottom: 1px solid #262b4d;
+}
+.brand { font-weight: 700; color: var(--fg); text-decoration: none; font-size: 1.15rem; }
+.topbar nav a { color: var(--muted); text-decoration: none; margin-left: 1rem; }
+.topbar nav a:hover { color: var(--fg); }
+.container { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+.hero h1 { font-size: 2rem; margin: 0 0 .4rem; }
+.sub { color: var(--muted); margin-top: 0; }
+.note { background: var(--panel2); border-left: 3px solid var(--accent);
+  padding: .6rem .9rem; border-radius: 6px; color: var(--muted); }
+code { background: #2a2f52; padding: .1rem .35rem; border-radius: 4px; }
+
+.search { display: flex; flex-direction: column; gap: .7rem; margin: 1.5rem 0; }
+.search.inline { flex-direction: row; }
+.search textarea, .search input[type=email], .search input[type=file], .search select {
+  background: var(--panel); color: var(--fg); border: 1px solid #2d3358;
+  border-radius: 8px; padding: .7rem .9rem; font: inherit; width: 100%;
+}
+.search button, button {
+  background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+  padding: .7rem 1.1rem; font: inherit; cursor: pointer; font-weight: 600;
+}
+button:hover { filter: brightness(1.08); }
+.btn-ghost { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem; margin-top: 2rem; }
+.card { background: var(--panel); border: 1px solid #262b4d; border-radius: 10px;
+  padding: 1rem; }
+.card h3 { margin: 0 0 .3rem; font-size: 1rem; }
+.card p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+.joblist { list-style: none; padding: 0; }
+.jobitem, .appcard { display: flex; gap: 1rem; background: var(--panel);
+  border: 1px solid #262b4d; border-radius: 10px; padding: 1rem; margin-bottom: .8rem; }
+.appcard { flex-direction: column; }
+.apphead { display: flex; gap: 1rem; align-items: center; }
+.score { min-width: 46px; height: 46px; border-radius: 50%; background: var(--panel2);
+  color: var(--good); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; }
+.jobtitle { color: var(--fg); text-decoration: none; font-weight: 600; }
+.jobtitle:hover { color: var(--accent); }
+.jobmeta { color: var(--muted); font-size: .88rem; margin-top: .2rem; }
+.src { opacity: .7; }
+.tag { background: var(--tag); color: var(--fg); padding: .1rem .5rem;
+  border-radius: 999px; font-size: .78rem; margin: .1rem; display: inline-block; }
+.tags { margin: .4rem 0; }
+
+.status { padding: .1rem .55rem; border-radius: 999px; font-size: .78rem; }
+.status-matched { background: #3a3f66; }
+.status-tailored { background: #394a8a; }
+.status-ready { background: #2f6f52; }
+.status-submitted { background: #2f5f8f; }
+.status-archived { background: #4a4a4a; }
+
+.appactions { display: flex; gap: .8rem; margin-top: .8rem; flex-wrap: wrap;
+  align-items: center; }
+.appactions form { display: flex; gap: .4rem; align-items: center; margin: 0; }
+.letter pre { white-space: pre-wrap; background: var(--panel2); padding: .8rem;
+  border-radius: 8px; color: var(--muted); max-height: 240px; overflow: auto; }
+details summary { cursor: pointer; color: var(--accent); margin: .4rem 0; }
+
+.back { color: var(--accent); text-decoration: none; display: inline-block;
+  margin: 1rem 0; }
+.footer { text-align: center; color: var(--muted); font-size: .82rem;
+  padding: 1.5rem; border-top: 1px solid #262b4d; }
+.parsed { background: var(--panel); border: 1px solid #262b4d; border-radius: 10px;
+  padding: 1.2rem; margin-top: 1.5rem; }

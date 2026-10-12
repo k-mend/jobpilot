@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Results — JobPilot{% endblock %}
+{% block content %}
+<h1>Matches</h1>
+<p class="sub">Query: <em>{{ query }}</em> — {{ results|length }} result(s)</p>
+<a class="back" href="/">← new search</a>
+
+{% if not results %}
+  <p class="note">No matches scored above zero. Try broader terms or different keywords.</p>
+{% else %}
+<ul class="joblist">
+  {% for r in results %}
+  <li class="jobitem">
+    <div class="score" title="relevance score">{{ r.score|round|int }}</div>
+    <div class="jobmain">
+      <a class="jobtitle" href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>
+      <div class="jobmeta">
+        {{ r.company }}{% if r.location %} · {{ r.location }}{% endif %}
+        {% if r.remote %}· <span class="tag">remote</span>{% endif %}
+        · <span class="src">{{ r.source }}</span>
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

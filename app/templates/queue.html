@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Queue — JobPilot{% endblock %}
+{% block content %}
+<h1>Application queue</h1>
+<form class="search inline" action="/queue" method="get">
+  <input type="email" name="email" value="{{ email }}" placeholder="your email" required>
+  <button type="submit">Load queue</button>
+</form>
+
+{% if email and not applications %}
+  <p class="note">No applications yet for {{ email }}. Run a search or a scan first.</p>
+{% endif %}
+
+{% for a in applications %}
+<div class="appcard">
+  <div class="apphead">
+    <div class="score">{{ a.score|round|int }}</div>
+    <div>
+      <a class="jobtitle" href="{{ a.url }}" target="_blank" rel="noopener">{{ a.title }}</a>
+      <div class="jobmeta">{{ a.company }} · <span class="status status-{{ a.status }}">{{ a.status }}</span></div>
+    </div>
+  </div>
+
+  {% if a.cover_letter %}
+  <details class="letter"><summary>Cover letter preview</summary>
+    <pre>{{ a.cover_letter }}</pre>
+  </details>
+  {% endif %}
+
+  <div class="appactions">
+    <form action="/queue/{{ a.id }}/tailor" method="post">
+      <input type="hidden" name="email" value="{{ email }}">
+      <button class="btn-ghost" type="submit">Tailor</button>
+    </form>
+    <form action="/queue/{{ a.id }}/status" method="post">
+      <input type="hidden" name="email" value="{{ email }}">
+      <select name="status">
+        {% for s in statuses %}
+        <option value="{{ s }}" {% if s == a.status %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Set</button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

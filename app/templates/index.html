@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}JobPilot — describe the job you want{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Describe the job you want</h1>
+  <p class="sub">JobPilot scans free job boards, ranks matches against your CV, and
+     tailors a CV + cover letter for each — ready for one-click review.</p>
+  {% if not llm_enabled %}
+  <p class="note">Running in free template mode. Add a <code>GEMINI_API_KEY</code> for
+     AI-rewritten CVs and cover letters.</p>
+  {% endif %}
+</section>
+
+<form class="search" action="/search" method="post">
+  <textarea name="query" rows="3" required
+    placeholder="e.g. remote senior python backend role, fintech, EU time zone, no on-call"></textarea>
+  <input type="email" name="user_email" placeholder="your email (optional, to use your CV)">
+  <button type="submit">Find jobs</button>
+</form>
+
+<section class="cards">
+  <div class="card"><h3>1 · Describe</h3><p>Plain-English job description → structured search.</p></div>
+  <div class="card"><h3>2 · Match</h3><p>Ranked against the role and your parsed CV.</p></div>
+  <div class="card"><h3>3 · Tailor</h3><p>Per-job CV + cover letter drafted automatically.</p></div>
+  <div class="card"><h3>4 · Review</h3><p>Approve from the queue — you stay in control.</p></div>
+</section>
+{% endblock %}
