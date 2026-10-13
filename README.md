@@ -57,6 +57,9 @@ Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Documentation
 
+- [`docs/APPLY_WORKFLOW.md`](docs/APPLY_WORKFLOW.md) — **how to actually find and apply
+  for jobs, click by click** (upload CV → search → save → tailor → apply → track). Start
+  here if you're a user.
 - [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md) — **step-by-step tutorial to build a
   project like this from scratch**, in the order it was built, with the decisions and
   pitfalls called out. Start here if you want to follow along.

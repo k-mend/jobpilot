@@ -8,7 +8,9 @@
 </form>
 
 {% if email and not applications %}
-  <p class="note">No applications yet for {{ email }}. Run a search or a scan first.</p>
+  <p class="note">No applications yet for {{ email }}. Go to
+  <a href="/">Search</a>, find jobs, and click <strong>“Save to apply”</strong> to add
+  them here.</p>
 {% endif %}
 
 {% for a in applications %}
@@ -16,22 +18,13 @@
   <div class="apphead">
     <div class="score">{{ a.score|round|int }}</div>
     <div>
-      <a class="jobtitle" href="{{ a.url }}" target="_blank" rel="noopener">{{ a.title }}</a>
+      <a class="jobtitle" href="/application/{{ a.id }}?email={{ email }}">{{ a.title }}</a>
       <div class="jobmeta">{{ a.company }} · <span class="status status-{{ a.status }}">{{ a.status }}</span></div>
     </div>
   </div>
 
-  {% if a.cover_letter %}
-  <details class="letter"><summary>Cover letter preview</summary>
-    <pre>{{ a.cover_letter }}</pre>
-  </details>
-  {% endif %}
-
   <div class="appactions">
-    <form action="/queue/{{ a.id }}/tailor" method="post">
-      <input type="hidden" name="email" value="{{ email }}">
-      <button class="btn-ghost" type="submit">Tailor</button>
-    </form>
+    <a class="btn-apply" href="/application/{{ a.id }}?email={{ email }}">Open &amp; apply →</a>
     <form action="/queue/{{ a.id }}/status" method="post">
       <input type="hidden" name="email" value="{{ email }}">
       <select name="status">

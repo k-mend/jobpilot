@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Apply — JobPilot{% endblock %}
+{% block content %}
+
+{% if not app %}
+  <p class="note">Application not found. <a href="/queue">Back to your queue</a>.</p>
+{% else %}
+
+<a class="back" href="/queue?email={{ email }}">← back to queue</a>
+
+<div class="detail-head">
+  <div class="score big">{{ app.score|round|int }}</div>
+  <div>
+    <h1>{{ app.title }}</h1>
+    <div class="jobmeta">
+      {{ app.company }}{% if app.location %} · {{ app.location }}{% endif %}
+      · <span class="status status-{{ app.status }}">{{ app.status }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1: Prepare -->
+<section class="step">
+  <h2>Step 1 — Prepare your documents</h2>
+  {% if not app.tailored_cv and not app.cover_letter %}
+    <p class="note">No tailored documents yet. Click <strong>Tailor now</strong> to
+    generate a CV + cover letter for this job{% if not has_llm %} (using free
+    templates — add an AI key for smarter output){% endif %}. You need a CV uploaded on
+    the <a href="/cv">CV page</a> first.</p>
+  {% endif %}
+  <form action="/queue/{{ app.id }}/tailor" method="post" style="display:inline-block">
+    <input type="hidden" name="email" value="{{ email }}">
+    <input type="hidden" name="next" value="/application/{{ app.id }}?email={{ email }}">
+    <button type="submit">{{ 'Re-tailor' if app.tailored_cv else 'Tailor now' }}</button>
+  </form>
+</section>
+
+{% if app.tailored_cv %}
+<section class="step">
+  <h3>Tailored CV</h3>
+  <div class="doc-actions">
+    <button type="button" class="btn-ghost" onclick="copyText('cv')">Copy</button>
+    <a class="btn-ghost" href="/application/{{ app.id }}/download/cv">Download .txt</a>
+  </div>
+  <textarea id="cv" class="doc" rows="16" readonly>{{ app.tailored_cv }}</textarea>
+</section>
+{% endif %}
+
+{% if app.cover_letter %}
+<section class="step">
+  <h3>Cover letter</h3>
+  <div class="doc-actions">
+    <button type="button" class="btn-ghost" onclick="copyText('cover')">Copy</button>
+    <a class="btn-ghost" href="/application/{{ app.id }}/download/cover-letter">Download .txt</a>
+  </div>
+  <textarea id="cover" class="doc" rows="12" readonly>{{ app.cover_letter }}</textarea>
+</section>
+{% endif %}
+
+<!-- STEP 2: Apply -->
+<section class="step">
+  <h2>Step 2 — Apply on the job site</h2>
+  <p>JobPilot does not auto-submit (see why in the docs). Open the posting, paste your
+     tailored CV + cover letter, and submit there.</p>
+  {% if app.url %}
+    <a class="btn-apply" href="{{ app.url }}" target="_blank" rel="noopener"
+       onclick="markOpened()">Open job posting ↗</a>
+  {% else %}
+    <p class="note">No direct URL for this job. Search the company's careers page.</p>
+  {% endif %}
+</section>
+
+<!-- STEP 3: Track -->
+<section class="step">
+  <h2>Step 3 — Track your status</h2>
+  <form action="/queue/{{ app.id }}/status" method="post" class="statusform">
+    <input type="hidden" name="email" value="{{ email }}">
+    <input type="hidden" name="next" value="/application/{{ app.id }}?email={{ email }}">
+    <select name="status">
+      {% for s in statuses %}
+      <option value="{{ s }}" {% if s == app.status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Update status</button>
+  </form>
+  <p class="hint">Mark it <strong>submitted</strong> after you apply, then
+     <strong>archived</strong> when it's resolved.</p>
+</section>
+
+{% if app.description %}
+<section class="step">
+  <details>
+    <summary>Original job description</summary>
+    <div class="jobdesc">{{ app.description|safe }}</div>
+  </details>
+</section>
+{% endif %}
+
+<script>
+  function copyText(id) {
+    const el = document.getElementById(id);
+    el.select();
+    navigator.clipboard.writeText(el.value).then(() => {
+      event.target.textContent = 'Copied!';
+      setTimeout(() => { event.target.textContent = 'Copy'; }, 1500);
+    });
+  }
+  function markOpened() {
+    // Convenience: nudge status select toward 'submitted' after opening the posting.
+    const sel = document.querySelector('.statusform select');
+    if (sel && (sel.value === 'matched' || sel.value === 'tailored')) {
+      sel.value = 'ready';
+    }
+  }
+</script>
+{% endif %}
+{% endblock %}

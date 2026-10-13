@@ -237,6 +237,69 @@ def tailor_application(session: Session, application_id: int) -> Optional[Applic
 
 # --- user helpers ------------------------------------------------------------------
 
+def save_job_to_queue(
+    session: Session,
+    user_email: str,
+    *,
+    source: str,
+    title: str,
+    company: str = "",
+    location: str = "",
+    remote: bool = False,
+    url: str = "",
+    description: str = "",
+    external_id: str = "",
+    score: float = 0.0,
+    tailor: bool = True,
+) -> Application:
+    """Save a job (from a search result) into the user's queue.
+
+    Upserts the Job, then creates an Application (or returns the existing one).
+    If the user has a CV and tailor=True, immediately tailors CV + cover letter.
+    """
+    user = get_or_create_user(session, user_email)
+
+    # Reconstruct a RawJob. If no external_id was supplied, derive a stable one
+    # from the URL (or title) so re-saving the same job dedupes correctly.
+    ext = external_id or (url or title)
+    raw = RawJob(
+        source=source or "manual",
+        external_id=ext,
+        title=title,
+        company=company,
+        location=location,
+        remote=remote,
+        url=url,
+        description=description,
+    )
+    job = _upsert_job(session, raw)
+
+    existing = session.exec(
+        select(Application).where(
+            Application.user_id == user.id,
+            Application.job_id == job.id,
+        )
+    ).first()
+    if existing:
+        return existing
+
+    app = Application(
+        user_id=user.id,
+        job_id=job.id,
+        status="matched",
+        score=score,
+    )
+    session.add(app)
+    session.commit()
+    session.refresh(app)
+
+    if tailor:
+        profile = _get_profile_for_user(session, user.id)
+        if profile:
+            return tailor_application(session, app.id)
+    return app
+
+
 def get_or_create_user(session: Session, email: str, name: str = "") -> User:
     user = session.exec(select(User).where(User.email == email)).first()
     if user:

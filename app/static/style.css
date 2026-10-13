@@ -78,3 +78,36 @@ details summary { cursor: pointer; color: var(--accent); margin: .4rem 0; }
   padding: 1.5rem; border-top: 1px solid #262b4d; }
 .parsed { background: var(--panel); border: 1px solid #262b4d; border-radius: 10px;
   padding: 1.2rem; margin-top: 1.5rem; }
+
+/* --- apply flow --- */
+.hint { color: var(--muted); font-size: .85rem; }
+.btn-save { background: var(--good); color: #06281c; font-weight: 700; white-space: nowrap; }
+.btn-save:hover { filter: brightness(1.05); }
+.btn-apply {
+  display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+  padding: .6rem 1rem; border-radius: 8px; font-weight: 600;
+}
+.btn-apply:hover { filter: brightness(1.08); }
+.saveform { display: flex; align-items: center; margin: 0; }
+#emailbar { align-items: center; }
+
+.detail-head { display: flex; gap: 1rem; align-items: center; margin: .5rem 0 1rem; }
+.detail-head h1 { margin: 0; font-size: 1.5rem; }
+.score.big { min-width: 60px; height: 60px; font-size: 1.3rem; }
+
+.step {
+  background: var(--panel); border: 1px solid #262b4d; border-radius: 10px;
+  padding: 1rem 1.1rem; margin-bottom: 1rem;
+}
+.step h2 { margin: 0 0 .5rem; font-size: 1.05rem; }
+.step h3 { margin: 0 0 .5rem; }
+.doc-actions { display: flex; gap: .6rem; margin-bottom: .5rem; }
+.doc {
+  width: 100%; background: var(--panel2); color: var(--fg); border: 1px solid #2d3358;
+  border-radius: 8px; padding: .7rem; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .85rem; resize: vertical;
+}
+.statusform { display: flex; gap: .5rem; align-items: center; margin: 0 0 .4rem; }
+.jobdesc { color: var(--muted); font-size: .9rem; max-height: 320px; overflow: auto;
+  margin-top: .6rem; }
+.jobdesc * { max-width: 100%; }

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlmodel import Session, select
 
 from app.config import get_settings
@@ -44,6 +44,7 @@ def do_search(request: Request, query: str = Form(...),
         {
             "title": j.title, "company": j.company, "location": j.location,
             "remote": j.remote, "url": j.url, "score": score, "source": j.source,
+            "description": j.description, "external_id": j.external_id,
         }
         for j, score in ranked if score > 0
     ]
@@ -114,17 +115,100 @@ def queue_page(request: Request, email: Optional[str] = None,
 
 @router.post("/queue/{application_id}/status", response_class=HTMLResponse)
 def queue_set_status(application_id: int, status: str = Form(...),
-                     email: str = Form(""),
+                     email: str = Form(""), next: str = Form(""),
                      session: Session = Depends(get_session)):
     try:
         queue_service.set_status(session, application_id, status)
     except ValueError:
         pass
-    return RedirectResponse(url=f"/queue?email={email}", status_code=303)
+    dest = next or f"/queue?email={email}"
+    return RedirectResponse(url=dest, status_code=303)
 
 
 @router.post("/queue/{application_id}/tailor", response_class=HTMLResponse)
-def queue_tailor(application_id: int, email: str = Form(""),
+def queue_tailor(application_id: int, email: str = Form(""), next: str = Form(""),
                  session: Session = Depends(get_session)):
     queue_service.tailor_application(session, application_id)
-    return RedirectResponse(url=f"/queue?email={email}", status_code=303)
+    dest = next or f"/queue?email={email}"
+    return RedirectResponse(url=dest, status_code=303)
+
+
+@router.post("/save", response_class=HTMLResponse)
+def save_from_results(request: Request,
+                      user_email: str = Form(...),
+                      source: str = Form("manual"),
+                      title: str = Form(...),
+                      company: str = Form(""),
+                      location: str = Form(""),
+                      remote: str = Form(""),
+                      url: str = Form(""),
+                      description: str = Form(""),
+                      external_id: str = Form(""),
+                      score: float = Form(0.0),
+                      session: Session = Depends(get_session)):
+    """Save a job from the search results into the user's queue, then show detail."""
+    app = queue_service.save_job_to_queue(
+        session, user_email,
+        source=source, title=title, company=company, location=location,
+        remote=bool(remote), url=url, description=description,
+        external_id=external_id, score=score,
+    )
+    return RedirectResponse(
+        url=f"/application/{app.id}?email={user_email}", status_code=303
+    )
+
+
+@router.get("/application/{application_id}", response_class=HTMLResponse)
+def application_detail(application_id: int, request: Request,
+                       email: Optional[str] = None,
+                       session: Session = Depends(get_session)):
+    app = session.get(Application, application_id)
+    if not app:
+        return _templates().TemplateResponse(
+            "application.html",
+            {"request": request, "app": None, "email": email or ""},
+        )
+    job = session.get(Job, app.job_id)
+    data = {
+        "id": app.id,
+        "status": app.status,
+        "score": app.score,
+        "tailored_cv": app.tailored_cv,
+        "cover_letter": app.cover_letter,
+        "title": job.title if job else "",
+        "company": job.company if job else "",
+        "location": job.location if job else "",
+        "url": job.url if job else "",
+        "description": job.description if job else "",
+    }
+    return _templates().TemplateResponse(
+        "application.html",
+        {"request": request, "app": data, "email": email or "",
+         "statuses": queue_service.VALID_STATUSES, "has_llm": get_settings().llm_enabled},
+    )
+
+
+@router.get("/application/{application_id}/download/cv")
+def download_cv(application_id: int, session: Session = Depends(get_session)):
+    app = session.get(Application, application_id)
+    if not app or not app.tailored_cv:
+        return PlainTextResponse("No tailored CV yet. Click 'Tailor' first.",
+                                 status_code=404)
+    return PlainTextResponse(
+        app.tailored_cv,
+        headers={"Content-Disposition":
+                 f'attachment; filename="jobpilot_cv_{application_id}.txt"'},
+    )
+
+
+@router.get("/application/{application_id}/download/cover-letter")
+def download_cover(application_id: int, session: Session = Depends(get_session)):
+    app = session.get(Application, application_id)
+    if not app or not app.cover_letter:
+        return PlainTextResponse("No cover letter yet. Click 'Tailor' first.",
+                                 status_code=404)
+    return PlainTextResponse(
+        app.cover_letter,
+        headers={"Content-Disposition":
+                 f'attachment; filename="jobpilot_cover_letter_{application_id}.txt"'},
+    )

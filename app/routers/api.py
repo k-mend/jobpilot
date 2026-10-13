@@ -42,6 +42,19 @@ class StatusRequest(BaseModel):
     status: str
 
 
+class SaveJobRequest(BaseModel):
+    user_email: str
+    source: str = "manual"
+    title: str
+    company: str = ""
+    location: str = ""
+    remote: bool = False
+    url: str = ""
+    description: str = ""
+    external_id: str = ""
+    score: float = 0.0
+
+
 # --- search -----------------------------------------------------------------------
 
 @router.post("/search", response_model=List[JobResult])
@@ -176,6 +189,46 @@ def set_status(application_id: int, req: StatusRequest,
     if not app:
         raise HTTPException(404, "application not found")
     return {"id": app.id, "status": app.status}
+
+
+@router.post("/applications/save")
+def save_job(req: SaveJobRequest, session: Session = Depends(get_session)):
+    app = queue_service.save_job_to_queue(
+        session,
+        req.user_email,
+        source=req.source,
+        title=req.title,
+        company=req.company,
+        location=req.location,
+        remote=req.remote,
+        url=req.url,
+        description=req.description,
+        external_id=req.external_id,
+        score=req.score,
+    )
+    return {"id": app.id, "status": app.status, "job_id": app.job_id}
+
+
+@router.get("/applications/{application_id}")
+def get_application(application_id: int, session: Session = Depends(get_session)):
+    app = session.get(Application, application_id)
+    if not app:
+        raise HTTPException(404, "application not found")
+    job = session.get(Job, app.job_id)
+    return {
+        "id": app.id,
+        "status": app.status,
+        "score": app.score,
+        "tailored_cv": app.tailored_cv,
+        "cover_letter": app.cover_letter,
+        "job": {
+            "title": job.title if job else "",
+            "company": job.company if job else "",
+            "location": job.location if job else "",
+            "url": job.url if job else "",
+            "description": job.description if job else "",
+        },
+    }
 
 
 @router.get("/health")
