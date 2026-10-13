@@ -5,16 +5,14 @@
 <p class="sub">Query: <em>{{ query }}</em> — {{ results|length }} result(s)</p>
 <a class="back" href="/">← new search</a>
 
+{% if not logged_in %}
+  <p class="note"><a href="/login">Log in</a> or <a href="/signup">sign up</a> to save
+  jobs, tailor your CV, and track applications.</p>
+{% endif %}
+
 {% if not results %}
   <p class="note">No matches scored above zero. Try broader terms or different keywords.</p>
 {% else %}
-
-<form class="search inline" id="emailbar" onsubmit="return false;">
-  <input type="email" id="user_email" value="{{ user_email }}" required
-         placeholder="your email (needed to save & tailor)">
-  <span class="hint">Enter your email, then click “Save to apply” on any job.</span>
-</form>
-
 <ul class="joblist">
   {% for r in results %}
   <li class="jobitem">
@@ -27,8 +25,8 @@
         · <span class="src">{{ r.source }}</span>
       </div>
     </div>
+    {% if logged_in %}
     <form class="saveform" action="/save" method="post">
-      <input type="hidden" name="user_email" class="save_email" value="{{ user_email }}">
       <input type="hidden" name="source" value="{{ r.source }}">
       <input type="hidden" name="title" value="{{ r.title }}">
       <input type="hidden" name="company" value="{{ r.company }}">
@@ -40,27 +38,9 @@
       <input type="hidden" name="score" value="{{ r.score }}">
       <button type="submit" class="btn-save">Save to apply →</button>
     </form>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>
-
-<script>
-  // Keep every Save form's email in sync with the email bar.
-  const emailInput = document.getElementById('user_email');
-  function syncEmails() {
-    document.querySelectorAll('.save_email').forEach(e => e.value = emailInput.value);
-  }
-  emailInput.addEventListener('input', syncEmails);
-  document.querySelectorAll('.saveform').forEach(f => {
-    f.addEventListener('submit', (ev) => {
-      if (!emailInput.value) {
-        ev.preventDefault();
-        alert('Please enter your email at the top first.');
-      } else {
-        syncEmails();
-      }
-    });
-  });
-</script>
 {% endif %}
 {% endblock %}

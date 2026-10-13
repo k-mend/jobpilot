@@ -13,6 +13,13 @@
       <a href="/">Search</a>
       <a href="/cv">CV</a>
       <a href="/queue">Queue</a>
+      {% if current_user %}
+        <span class="navuser">{{ current_user.email }}</span>
+        <a href="/logout">Log out</a>
+      {% else %}
+        <a href="/login">Log in</a>
+        <a href="/signup">Sign up</a>
+      {% endif %}
     </nav>
   </header>
   <main class="container">

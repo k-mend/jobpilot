@@ -23,8 +23,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="JobPilot", version="0.1.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
-# Routers are imported after `templates` exists (ui router imports it).
-from app.routers import api, ui  # noqa: E402
+# Routers are imported after `templates` exists (ui/auth routers import it).
+from app.routers import api, auth, ui  # noqa: E402
 
 app.include_router(api.router)
+app.include_router(auth.router)
 app.include_router(ui.router)

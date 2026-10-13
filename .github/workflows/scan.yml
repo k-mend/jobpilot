@@ -1,19 +1,18 @@
-name: Scheduled Scan
+name: Daily Scan
+
+# Runs the per-user job scan once a day. For each active saved search it finds NEW
+# matches (skipping jobs the user already saved/applied to) and emails a digest.
+# Uses durable Neon Postgres via the DATABASE_URL secret.
 
 on:
   schedule:
-    # Every day at 06:00 UTC. Adjust as you like.
-    - cron: "0 6 * * *"
+    - cron: "0 6 * * *"   # daily 06:00 UTC
   workflow_dispatch:
     inputs:
       query:
         description: "Optional ad-hoc query (overrides saved searches)"
         required: false
         default: ""
-
-# Allow the job to commit the updated database back to the repo.
-permissions:
-  contents: write
 
 jobs:
   scan:
@@ -31,66 +30,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Restore database (if present on data branch)
-        run: |
-          git fetch origin data || true
-          if git cat-file -e origin/data:jobpilot.db 2>/dev/null; then
-            git show origin/data:jobpilot.db > jobpilot.db
-            echo "Restored jobpilot.db from data branch."
-          else
-            echo "No existing database; a fresh one will be created."
-          fi
-
-      - name: Seed a demo saved search if DB is empty
-        env:
-          DEMO_EMAIL: ${{ vars.DEMO_EMAIL || 'demo@example.com' }}
-        run: |
-          python - <<'PY'
-          import os
-          from sqlmodel import Session, select
-          from app.database import engine, init_db
-          from app.models import SavedSearch
-          init_db()
-          with Session(engine) as s:
-              if not s.exec(select(SavedSearch)).first():
-                  from app.services import queue
-                  u = queue.get_or_create_user(s, os.environ["DEMO_EMAIL"])
-                  s.add(SavedSearch(user_id=u.id, description="remote python backend", active=True))
-                  s.commit()
-                  print("Seeded demo saved search.")
-          PY
-
       - name: Run scan
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           SMTP_FROM: ${{ secrets.SMTP_FROM }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          BASE_URL: ${{ secrets.BASE_URL }}
         run: |
           if [ -n "${{ github.event.inputs.query }}" ]; then
             python -m app.cli scan --query "${{ github.event.inputs.query }}"
           else
             python -m app.cli scan
           fi
-
-      - name: Commit database back to data branch
-        run: |
-          git config user.name "jobpilot-bot"
-          git config user.email "jobpilot-bot@users.noreply.github.com"
-          # Keep only the DB file on a dedicated 'data' branch.
-          cp jobpilot.db /tmp/jobpilot.db
-          git fetch origin data || true
-          if git rev-parse --verify origin/data >/dev/null 2>&1; then
-            git checkout -B data origin/data
-          else
-            git checkout --orphan data
-            git rm -rf . >/dev/null 2>&1 || true
-          fi
-          cp /tmp/jobpilot.db jobpilot.db
-          git add -f jobpilot.db
-          git commit -m "chore: update scan database [skip ci]" || echo "No changes."
-          git push origin data

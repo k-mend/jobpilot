@@ -111,3 +111,12 @@ details summary { cursor: pointer; color: var(--accent); margin: .4rem 0; }
 .jobdesc { color: var(--muted); font-size: .9rem; max-height: 320px; overflow: auto;
   margin-top: .6rem; }
 .jobdesc * { max-width: 100%; }
+
+/* --- auth + saved searches --- */
+.navuser { color: var(--muted); font-size: .85rem; margin-left: 1rem; }
+.note.error { border-left-color: #ff6b6b; color: #ffd0d0; }
+.savedlist { list-style: none; padding: 0; margin: .8rem 0 0; }
+.savedlist li { display: flex; justify-content: space-between; align-items: center;
+  gap: 1rem; background: var(--panel2); border: 1px solid #2d3358; border-radius: 8px;
+  padding: .5rem .8rem; margin-bottom: .5rem; }
+.btn-ghost.small { padding: .3rem .6rem; font-size: .8rem; }

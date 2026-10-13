@@ -11,13 +11,34 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # Optional LLM keys — set in the Render dashboard to enable AI tailoring.
-      # Provider priority: OpenRouter first, then Gemini.
+
+      # Durable storage: paste your Neon Postgres URL (docs/DATABASE_NEON.md).
+      # Without it, data resets on every redeploy (SQLite on ephemeral disk).
+      - key: DATABASE_URL
+        sync: false
+
+      # Signs login cookies — set a long random value (Render can generate one).
+      - key: APP_SECRET
+        generateValue: true
+
+      # Public URL used in email links. Set to your Render URL.
+      - key: BASE_URL
+        sync: false
+
+      # Optional LLM keys (OpenRouter preferred, then Gemini).
       - key: OPENROUTER_API_KEY
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-      # SQLite lives on the container's ephemeral disk (resets on redeploy).
-      # That's fine: searches re-scan live job boards each time.
-      - key: DATABASE_URL
-        value: "sqlite:///jobpilot.db"
+
+      # Email alerts via Gmail SMTP (docs/EMAIL_ALERTS.md).
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false

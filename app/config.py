@@ -33,9 +33,24 @@ class Settings(BaseSettings):
     # Scan behavior
     scan_max_results: int = 50
     tailor_top_n: int = 5
+    scan_min_score: float = 25.0  # ignore weak matches below this (0-100)
 
-    # App
-    app_secret: str = "change-me"
+    # Email alerts (Gmail SMTP recommended; see docs/EMAIL_ALERTS.md)
+    smtp_host: Optional[str] = None
+    smtp_port: int = 587
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_from: Optional[str] = None
+
+    # Monthly cleanup / retention (days). Jobs expire ~1 month, so defaults are tuned
+    # for that. See docs/RETENTION.md.
+    retain_archived_days: int = 90       # applied/closed items kept this long
+    retain_stale_matched_days: int = 35  # never-acted-on matches dropped after this
+    retain_orphan_job_days: int = 45     # jobs with no application dropped after this
+
+    # App / auth
+    app_secret: str = "change-me"  # also signs the session cookie
+    base_url: str = "http://127.0.0.1:8000"
 
     def board_list(self, raw: str) -> List[str]:
         return [b.strip() for b in raw.split(",") if b.strip()]
@@ -55,6 +70,10 @@ class Settings(BaseSettings):
     @property
     def llm_enabled(self) -> bool:
         return bool(self.openrouter_api_key or self.gemini_api_key)
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.smtp_host and self.smtp_user and self.smtp_password)
 
     @property
     def active_provider(self) -> Optional[str]:

@@ -1,6 +1,10 @@
-"""Notifications. All channels are optional; default is a no-op log line.
+"""Email (and optional Telegram) notifications for new job matches.
 
-Configure via env (SMTP_* or TELEGRAM_*) to enable. Kept dependency-free (stdlib only).
+Primary channel is Gmail SMTP, configured via Settings (SMTP_* env vars). If SMTP isn't
+configured, we fall back to Telegram (if set) and finally to a log line. Stdlib-only for
+email so there's no extra dependency.
+
+See docs/EMAIL_ALERTS.md for the Gmail App Password setup.
 """
 from __future__ import annotations
 
@@ -9,42 +13,45 @@ import smtplib
 from email.mime.text import MIMEText
 from typing import List
 
+from app.config import get_settings
+
 
 def _format_digest(user_email: str, matches: List[dict]) -> str:
-    lines = [f"JobPilot digest for {user_email}", "=" * 40, ""]
+    lines = [f"JobPilot — {len(matches)} new job match(es) for {user_email}",
+             "=" * 48, ""]
     for m in matches:
-        lines.append(f"[{m['score']:.0f}] {m['title']} @ {m['company']}")
+        lines.append(f"[{m['score']:.0f}] {m['title']} @ {m.get('company', '')}")
         if m.get("url"):
             lines.append(f"    {m['url']}")
-    if not matches:
-        lines.append("No new matches this run.")
+    lines += ["", "Open your queue to tailor and apply:",
+              f"{get_settings().base_url}/queue"]
     return "\n".join(lines)
 
 
 def send_digest(user_email: str, matches: List[dict]) -> str:
-    """Send a digest via whichever channel is configured. Returns the channel used."""
-    body = _format_digest(user_email, matches)
+    """Send a digest of NEW matches. Returns the channel used ('email'/'telegram'/'log'/'skip')."""
+    if not matches:
+        return "skip"  # nothing new — don't send an empty email
 
-    # Email via SMTP if configured.
-    host = os.getenv("SMTP_HOST")
-    if host:
+    body = _format_digest(user_email, matches)
+    settings = get_settings()
+
+    # 1) Email via SMTP (Gmail recommended).
+    if settings.email_enabled:
         try:
             msg = MIMEText(body)
             msg["Subject"] = f"JobPilot: {len(matches)} new job match(es)"
-            msg["From"] = os.getenv("SMTP_FROM", os.getenv("SMTP_USER", "jobpilot"))
+            msg["From"] = settings.smtp_from or settings.smtp_user
             msg["To"] = user_email
-            with smtplib.SMTP(host, int(os.getenv("SMTP_PORT", "587"))) as server:
+            with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
                 server.starttls()
-                user = os.getenv("SMTP_USER")
-                pwd = os.getenv("SMTP_PASSWORD")
-                if user and pwd:
-                    server.login(user, pwd)
+                server.login(settings.smtp_user, settings.smtp_password)
                 server.send_message(msg)
             return "email"
-        except Exception:
-            pass  # fall through to log
+        except Exception as exc:
+            print(f"[notify] email failed: {exc}")
 
-    # Telegram if configured.
+    # 2) Telegram (optional).
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     if token and chat_id:
@@ -57,9 +64,9 @@ def send_digest(user_email: str, matches: List[dict]) -> str:
                 timeout=20.0,
             )
             return "telegram"
-        except Exception:
-            pass
+        except Exception as exc:
+            print(f"[notify] telegram failed: {exc}")
 
-    # Default: just log.
+    # 3) Fallback: log.
     print(body)
     return "log"

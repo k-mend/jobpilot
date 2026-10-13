@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Log in — JobPilot{% endblock %}
+{% block content %}
+<h1>Log in</h1>
+{% if error %}<p class="note error">{{ error }}</p>{% endif %}
+<form class="search" action="/login" method="post">
+  <input type="email" name="email" placeholder="email" required>
+  <input type="password" name="password" placeholder="password" required>
+  <button type="submit">Log in</button>
+</form>
+<p class="hint">No account yet? <a href="/signup">Sign up</a>.</p>
+{% endblock %}

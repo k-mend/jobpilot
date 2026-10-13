@@ -6,7 +6,7 @@
   <p class="note">Application not found. <a href="/queue">Back to your queue</a>.</p>
 {% else %}
 
-<a class="back" href="/queue?email={{ email }}">← back to queue</a>
+<a class="back" href="/queue">← back to queue</a>
 
 <div class="detail-head">
   <div class="score big">{{ app.score|round|int }}</div>
@@ -29,8 +29,7 @@
     the <a href="/cv">CV page</a> first.</p>
   {% endif %}
   <form action="/queue/{{ app.id }}/tailor" method="post" style="display:inline-block">
-    <input type="hidden" name="email" value="{{ email }}">
-    <input type="hidden" name="next" value="/application/{{ app.id }}?email={{ email }}">
+    <input type="hidden" name="next" value="/application/{{ app.id }}">
     <button type="submit">{{ 'Re-tailor' if app.tailored_cv else 'Tailor now' }}</button>
   </form>
 </section>
@@ -74,8 +73,7 @@
 <section class="step">
   <h2>Step 3 — Track your status</h2>
   <form action="/queue/{{ app.id }}/status" method="post" class="statusform">
-    <input type="hidden" name="email" value="{{ email }}">
-    <input type="hidden" name="next" value="/application/{{ app.id }}?email={{ email }}">
+    <input type="hidden" name="next" value="/application/{{ app.id }}">
     <select name="status">
       {% for s in statuses %}
       <option value="{{ s }}" {% if s == app.status %}selected{% endif %}>{{ s }}</option>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Sign up — JobPilot{% endblock %}
+{% block content %}
+<h1>Create your account</h1>
+<p class="sub">Your account keeps your CV, saved searches, and application history —
+   and lets JobPilot email you new matches and avoid re-showing jobs you've handled.</p>
+
+{% if error %}<p class="note error">{{ error }}</p>{% endif %}
+
+<form class="search" action="/signup" method="post">
+  <input type="text" name="name" placeholder="your name (optional)">
+  <input type="email" name="email" placeholder="email" required>
+  <input type="password" name="password" placeholder="password (min 8 characters)"
+         minlength="8" required>
+  <button type="submit">Sign up</button>
+</form>
+<p class="hint">Already have an account? <a href="/login">Log in</a>.</p>
+{% endblock %}

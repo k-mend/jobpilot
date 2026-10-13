@@ -62,6 +62,15 @@ def _cmd_seed(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_cleanup(args: argparse.Namespace) -> int:
+    init_db()
+    with Session(engine) as session:
+        result = queue_service.cleanup_old_data(session)
+    print(f"Cleanup complete: removed {result['removed_applications']} application(s) "
+          f"and {result['removed_jobs']} orphan job(s).")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="jobpilot")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -77,6 +86,9 @@ def main(argv=None) -> int:
     p_seed.add_argument("--name", default="")
     p_seed.add_argument("--query", default=None)
     p_seed.set_defaults(func=_cmd_seed)
+
+    p_clean = sub.add_parser("cleanup", help="delete old/stale backlog (run monthly)")
+    p_clean.set_defaults(func=_cmd_cleanup)
 
     args = parser.parse_args(argv)
     return args.func(args)

@@ -8,7 +8,7 @@ Application lifecycle: matched -> tailored -> ready -> submitted -> archived.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from sqlmodel import Session, select
@@ -118,7 +118,7 @@ def run_scan_for_search(
     digest: List[dict] = []
     tailored_count = 0
     for raw, score in ranked:
-        if score <= 0:
+        if score < settings.scan_min_score:
             continue
         job = _upsert_job(session, raw)
 
@@ -309,3 +309,62 @@ def get_or_create_user(session: Session, email: str, name: str = "") -> User:
     session.commit()
     session.refresh(user)
     return user
+
+
+# --- retention / cleanup -----------------------------------------------------------
+
+def cleanup_old_data(
+    session: Session, settings: Optional[Settings] = None
+) -> dict:
+    """Delete old, unimportant rows so the database doesn't grow forever.
+
+    Rules (all configurable via settings; see docs/RETENTION.md):
+      - archived applications older than `retain_archived_days` are deleted,
+      - 'matched' applications never acted on, older than `retain_stale_matched_days`,
+      - Job rows with no remaining applications, older than `retain_orphan_job_days`.
+
+    IMPORTANT: items the user is actively working (tailored/ready/submitted) are never
+    auto-deleted — only truly stale or finished items.
+    """
+    settings = settings or get_settings()
+    now = datetime.utcnow()
+    archived_cutoff = now - timedelta(days=settings.retain_archived_days)
+    matched_cutoff = now - timedelta(days=settings.retain_stale_matched_days)
+    orphan_cutoff = now - timedelta(days=settings.retain_orphan_job_days)
+
+    removed_apps = 0
+
+    # 1) Old archived applications.
+    for app in session.exec(
+        select(Application).where(
+            Application.status == "archived",
+            Application.updated_at < archived_cutoff,
+        )
+    ).all():
+        session.delete(app)
+        removed_apps += 1
+
+    # 2) Stale 'matched' applications nobody acted on.
+    for app in session.exec(
+        select(Application).where(
+            Application.status == "matched",
+            Application.created_at < matched_cutoff,
+        )
+    ).all():
+        session.delete(app)
+        removed_apps += 1
+
+    session.commit()
+
+    # 3) Orphan jobs (no applications) older than the cutoff.
+    removed_jobs = 0
+    for job in session.exec(select(Job).where(Job.created_at < orphan_cutoff)).all():
+        has_app = session.exec(
+            select(Application).where(Application.job_id == job.id)
+        ).first()
+        if not has_app:
+            session.delete(job)
+            removed_jobs += 1
+    session.commit()
+
+    return {"removed_applications": removed_apps, "removed_jobs": removed_jobs}

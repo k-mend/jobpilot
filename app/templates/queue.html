@@ -1,16 +1,44 @@
 {% extends "base.html" %}
 {% block title %}Queue — JobPilot{% endblock %}
 {% block content %}
-<h1>Application queue</h1>
-<form class="search inline" action="/queue" method="get">
-  <input type="email" name="email" value="{{ email }}" placeholder="your email" required>
-  <button type="submit">Load queue</button>
-</form>
+<h1>Your dashboard</h1>
 
-{% if email and not applications %}
-  <p class="note">No applications yet for {{ email }}. Go to
-  <a href="/">Search</a>, find jobs, and click <strong>“Save to apply”</strong> to add
-  them here.</p>
+<section class="step">
+  <h2>Saved searches (daily email alerts)</h2>
+  {% if email_enabled %}
+    <p class="hint">JobPilot scans these daily and emails you new matches at
+       {{ current_user.email }}.</p>
+  {% else %}
+    <p class="note">Email alerts aren't configured on this server yet. Saved searches
+       still get scanned daily; see <code>docs/EMAIL_ALERTS.md</code>.</p>
+  {% endif %}
+
+  <form class="search inline" action="/saved-searches" method="post">
+    <input type="text" name="description" required
+           placeholder="e.g. remote senior python backend, fintech">
+    <button type="submit">Add saved search</button>
+  </form>
+
+  {% if searches %}
+  <ul class="savedlist">
+    {% for s in searches %}
+    <li>
+      <span>{{ s.description }}</span>
+      <form action="/saved-searches/{{ s.id }}/delete" method="post" style="margin:0">
+        <button class="btn-ghost small" type="submit">Delete</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p class="hint">No saved searches yet. Add one above to get daily alerts.</p>
+  {% endif %}
+</section>
+
+<h2>Your applications</h2>
+{% if not applications %}
+  <p class="note">Nothing saved yet. Go to <a href="/">Search</a>, find jobs, and click
+  <strong>“Save to apply”</strong>.</p>
 {% endif %}
 
 {% for a in applications %}
@@ -18,15 +46,13 @@
   <div class="apphead">
     <div class="score">{{ a.score|round|int }}</div>
     <div>
-      <a class="jobtitle" href="/application/{{ a.id }}?email={{ email }}">{{ a.title }}</a>
+      <a class="jobtitle" href="/application/{{ a.id }}">{{ a.title }}</a>
       <div class="jobmeta">{{ a.company }} · <span class="status status-{{ a.status }}">{{ a.status }}</span></div>
     </div>
   </div>
-
   <div class="appactions">
-    <a class="btn-apply" href="/application/{{ a.id }}?email={{ email }}">Open &amp; apply →</a>
+    <a class="btn-apply" href="/application/{{ a.id }}">Open &amp; apply →</a>
     <form action="/queue/{{ a.id }}/status" method="post">
-      <input type="hidden" name="email" value="{{ email }}">
       <select name="status">
         {% for s in statuses %}
         <option value="{{ s }}" {% if s == a.status %}selected{% endif %}>{{ s }}</option>

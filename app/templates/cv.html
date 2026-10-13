@@ -6,7 +6,6 @@
    and to tailor applications.</p>
 
 <form class="search" action="/cv" method="post" enctype="multipart/form-data">
-  <input type="email" name="email" placeholder="your email" required>
   <input type="file" name="file" accept=".pdf,.docx,.md,.txt" required>
   <button type="submit">Upload & parse</button>
 </form>
@@ -14,7 +13,6 @@
 {% if result %}
 <section class="parsed">
   <h2>Parsed: {{ result.filename }}</h2>
-  <p><strong>Email:</strong> {{ result.email }}</p>
   <p><strong>Years experience:</strong> {{ result.years_experience or "—" }}</p>
   <p><strong>Skills detected:</strong></p>
   <div class="tags">

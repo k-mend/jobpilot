@@ -58,7 +58,7 @@ def test_search_endpoint_ranks():
 
 
 def test_search_ui_page():
-    r = client.post("/search", data={"query": "python", "user_email": ""})
+    r = client.post("/search", data={"query": "python"})
     assert r.status_code == 200
     assert "Matches" in r.text
 
