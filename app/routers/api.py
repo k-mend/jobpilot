@@ -259,11 +259,5 @@ def test_email(request: Request, session: Session = Depends(get_session)):
     user = auth_service.get_current_user(request, session)
     if not user:
         raise HTTPException(401, "Log in first, then call this endpoint.")
-    sample = [{
-        "title": "Test match — your email alerts work!",
-        "company": "JobPilot",
-        "url": get_settings().base_url,
-        "score": 100,
-    }]
-    channel = notify_service.send_digest(user.email, sample)
-    return {"sent_to": user.email, "channel": channel}
+    channel, detail = notify_service.send_test(user.email)
+    return {"sent_to": user.email, "channel": channel, "detail": detail}

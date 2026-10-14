@@ -94,3 +94,34 @@ def send_digest(user_email: str, matches: List[dict]) -> str:
     # 4) Fallback: log.
     print(body)
     return "log"
+
+
+def send_test(user_email: str):
+    """Like send_digest but returns (channel, detail) so a test endpoint can show the
+    real reason a provider failed (e.g. Resend rejecting an unverified recipient)."""
+    settings = get_settings()
+    sample = [{"title": "Test — your JobPilot email works!", "company": "JobPilot",
+               "url": settings.base_url, "score": 100}]
+    body = _format_digest(user_email, sample)
+    subject = "JobPilot: test email"
+
+    if settings.resend_api_key:
+        try:
+            resp = httpx.post(
+                RESEND_URL,
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+                json={"from": settings.resend_from, "to": [user_email],
+                      "subject": subject, "text": body},
+                timeout=30.0,
+            )
+            if resp.status_code < 300:
+                return "resend", "sent"
+            return "resend_error", f"HTTP {resp.status_code}: {resp.text[:300]}"
+        except Exception as exc:
+            return "resend_error", str(exc)[:300]
+
+    if settings.smtp_enabled:
+        channel = send_digest(user_email, sample)
+        return channel, "sent via smtp" if channel == "email" else "smtp failed"
+
+    return "log", "no email provider configured"
