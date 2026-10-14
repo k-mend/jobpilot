@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from app.config import get_settings
 from app.database import get_session
 from app.models import Application, CVDocument, Job, SavedSearch, User
+from app.services import auth as auth_service
 from app.services import cv as cv_service
+from app.services import notify as notify_service
 from app.services import queue as queue_service
 
 router = APIRouter(prefix="/api", tags=["api"])
@@ -234,3 +237,33 @@ def get_application(application_id: int, session: Session = Depends(get_session)
 @router.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@router.get("/status")
+def status():
+    """Report which integrations are configured (never reveals secret values)."""
+    s = get_settings()
+    return {
+        "status": "ok",
+        "database": "postgres" if not s.database_url.startswith("sqlite") else "sqlite",
+        "email_configured": s.email_enabled,
+        "email_channel": "resend" if s.resend_api_key
+        else ("smtp" if s.smtp_enabled else None),
+        "llm_provider": s.active_provider,
+    }
+
+
+@router.post("/test-email")
+def test_email(request: Request, session: Session = Depends(get_session)):
+    """Send a test email to the logged-in user via the configured channel."""
+    user = auth_service.get_current_user(request, session)
+    if not user:
+        raise HTTPException(401, "Log in first, then call this endpoint.")
+    sample = [{
+        "title": "Test match — your email alerts work!",
+        "company": "JobPilot",
+        "url": get_settings().base_url,
+        "score": 100,
+    }]
+    channel = notify_service.send_digest(user.email, sample)
+    return {"sent_to": user.email, "channel": channel}
