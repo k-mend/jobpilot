@@ -1,10 +1,12 @@
 """Email (and optional Telegram) notifications for new job matches.
 
-Primary channel is Gmail SMTP, configured via Settings (SMTP_* env vars). If SMTP isn't
-configured, we fall back to Telegram (if set) and finally to a log line. Stdlib-only for
-email so there's no extra dependency.
+Channels are tried in order, using whichever is configured:
+  1. Resend  — HTTP API (RESEND_API_KEY). No App Password needed. Recommended.
+  2. Gmail SMTP (SMTP_* vars). Needs 2FA + an App Password.
+  3. Telegram (optional).
+  4. Log line (always works; nothing leaves the machine).
 
-See docs/EMAIL_ALERTS.md for the Gmail App Password setup.
+Empty digests are never sent. See docs/EMAIL_ALERTS.md.
 """
 from __future__ import annotations
 
@@ -13,7 +15,11 @@ import smtplib
 from email.mime.text import MIMEText
 from typing import List
 
+import httpx
+
 from app.config import get_settings
+
+RESEND_URL = "https://api.resend.com/emails"
 
 
 def _format_digest(user_email: str, matches: List[dict]) -> str:
@@ -29,18 +35,38 @@ def _format_digest(user_email: str, matches: List[dict]) -> str:
 
 
 def send_digest(user_email: str, matches: List[dict]) -> str:
-    """Send a digest of NEW matches. Returns the channel used ('email'/'telegram'/'log'/'skip')."""
+    """Send a digest of NEW matches. Returns the channel used."""
     if not matches:
         return "skip"  # nothing new — don't send an empty email
 
     body = _format_digest(user_email, matches)
+    subject = f"JobPilot: {len(matches)} new job match(es)"
     settings = get_settings()
 
-    # 1) Email via SMTP (Gmail recommended).
-    if settings.email_enabled:
+    # 1) Resend (HTTP API) — easiest, no App Password.
+    if settings.resend_api_key:
+        try:
+            resp = httpx.post(
+                RESEND_URL,
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+                json={
+                    "from": settings.resend_from,
+                    "to": [user_email],
+                    "subject": subject,
+                    "text": body,
+                },
+                timeout=30.0,
+            )
+            resp.raise_for_status()
+            return "resend"
+        except Exception as exc:
+            print(f"[notify] resend failed: {exc}")
+
+    # 2) Gmail SMTP.
+    if settings.smtp_enabled:
         try:
             msg = MIMEText(body)
-            msg["Subject"] = f"JobPilot: {len(matches)} new job match(es)"
+            msg["Subject"] = subject
             msg["From"] = settings.smtp_from or settings.smtp_user
             msg["To"] = user_email
             with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
@@ -49,15 +75,13 @@ def send_digest(user_email: str, matches: List[dict]) -> str:
                 server.send_message(msg)
             return "email"
         except Exception as exc:
-            print(f"[notify] email failed: {exc}")
+            print(f"[notify] smtp failed: {exc}")
 
-    # 2) Telegram (optional).
+    # 3) Telegram (optional).
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     if token and chat_id:
         try:
-            import httpx
-
             httpx.post(
                 f"https://api.telegram.org/bot{token}/sendMessage",
                 json={"chat_id": chat_id, "text": body},
@@ -67,6 +91,6 @@ def send_digest(user_email: str, matches: List[dict]) -> str:
         except Exception as exc:
             print(f"[notify] telegram failed: {exc}")
 
-    # 3) Fallback: log.
+    # 4) Fallback: log.
     print(body)
     return "log"

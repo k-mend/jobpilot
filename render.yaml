@@ -31,7 +31,13 @@ services:
       - key: GEMINI_API_KEY
         sync: false
 
-      # Email alerts via Gmail SMTP (docs/EMAIL_ALERTS.md).
+      # Email alerts (docs/EMAIL_ALERTS.md).
+      # Option A (recommended): Resend HTTP API — no App Password needed.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        value: "JobPilot <onboarding@resend.dev>"
+      # Option B: Gmail SMTP.
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

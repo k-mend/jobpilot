@@ -35,7 +35,16 @@ class Settings(BaseSettings):
     tailor_top_n: int = 5
     scan_min_score: float = 25.0  # ignore weak matches below this (0-100)
 
-    # Email alerts (Gmail SMTP recommended; see docs/EMAIL_ALERTS.md)
+    # Email alerts. Two options (see docs/EMAIL_ALERTS.md):
+    #   A) Resend  — HTTP API, free tier, no App Password needed (recommended, esp. for
+    #      brand-new Google accounts that can't make App Passwords yet).
+    #   B) Gmail SMTP — needs 2FA + an App Password.
+    resend_api_key: Optional[str] = None
+    # The "from" address for Resend. Until you verify your own domain, Resend lets you
+    # send from onboarding@resend.dev (great for testing to your own inbox).
+    resend_from: str = "JobPilot <onboarding@resend.dev>"
+
+    # Gmail SMTP (alternative to Resend)
     smtp_host: Optional[str] = None
     smtp_port: int = 587
     smtp_user: Optional[str] = None
@@ -73,6 +82,13 @@ class Settings(BaseSettings):
 
     @property
     def email_enabled(self) -> bool:
+        return bool(
+            self.resend_api_key
+            or (self.smtp_host and self.smtp_user and self.smtp_password)
+        )
+
+    @property
+    def smtp_enabled(self) -> bool:
         return bool(self.smtp_host and self.smtp_user and self.smtp_password)
 
     @property
