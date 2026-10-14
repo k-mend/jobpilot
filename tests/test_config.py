@@ -22,3 +22,14 @@ def test_openrouter_only():
 def test_openrouter_takes_priority_over_gemini():
     s = Settings(openrouter_api_key="or-key", gemini_api_key="g-key", _env_file=None)
     assert s.active_provider == "openrouter"
+
+
+def test_empty_smtp_port_does_not_crash():
+    # GitHub Actions passes SMTP_PORT="" when the secret is unset; must not crash.
+    s = Settings(smtp_port="", _env_file=None)
+    assert s.smtp_port == 587
+
+
+def test_blank_smtp_port_coerced():
+    s = Settings(smtp_port="   ", _env_file=None)
+    assert s.smtp_port == 587

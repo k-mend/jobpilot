@@ -7,6 +7,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import List, Optional
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -60,6 +61,14 @@ class Settings(BaseSettings):
     # App / auth
     app_secret: str = "change-me"  # also signs the session cookie
     base_url: str = "http://127.0.0.1:8000"
+
+    @field_validator("smtp_port", mode="before")
+    @classmethod
+    def _blank_port_to_default(cls, v):
+        # Empty env vars (e.g. SMTP_PORT="") must not crash startup.
+        if v is None or (isinstance(v, str) and v.strip() == ""):
+            return 587
+        return v
 
     def board_list(self, raw: str) -> List[str]:
         return [b.strip() for b in raw.split(",") if b.strip()]
