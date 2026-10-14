@@ -46,6 +46,20 @@ sign up, grab an API key, done.
 - Later, if you want to send to *other* people or use your own address, verify a domain in
   Resend and set `RESEND_FROM` to something like `JobPilot <alerts@yourdomain.com>`.
 
+### ⚠️ Important free-tier restriction (this will bite you if you ignore it)
+On the free shared sender, Resend **only lets you send to the email address you used to
+sign up to Resend** (plus `delivered@resend.dev`). Sending to anything else returns:
+
+```
+HTTP 422: Invalid `to` field. Please use our testing email address instead of
+domains like `example.com`.
+```
+
+So to test alerts, **sign up to JobPilot with the SAME email you used for Resend**, then
+trigger a test. JobPilot's `channel` will report `resend` on success, or `resend_error`
+with the exact reason if the recipient isn't allowed. To email arbitrary recipients, you
+must verify a domain in Resend (see above).
+
 ### Free-tier limits
 ~3,000 emails/month / 100 per day on the free plan — far more than personal use needs.
 
