@@ -22,6 +22,12 @@ class User(SQLModel, table=True):
     # Auth. password_hash is empty for legacy/CLI-created users (cannot log in until set).
     password_hash: str = ""
     is_verified: bool = False
+    # Admin can view/revoke/delete users. is_disabled blocks login (revoked by admin).
+    is_admin: bool = False
+    is_disabled: bool = False
+    # Password reset: a hashed token + expiry. Cleared after use.
+    reset_token_hash: str = ""
+    reset_expires_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=_now)
 
 

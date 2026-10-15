@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Account — JobPilot{% endblock %}
+{% block content %}
+<h1>Account settings</h1>
+<p class="sub">Logged in as {{ current_user.email }}
+   {% if current_user.is_admin %}· <span class="tag">admin</span>{% endif %}</p>
+
+{% if message %}<p class="note">{{ message }}</p>{% endif %}
+{% if error %}<p class="note error">{{ error }}</p>{% endif %}
+
+<section class="step">
+  <h2>Change password</h2>
+  <form class="search" action="/account/password" method="post">
+    <input type="password" name="current_password" placeholder="current password" required>
+    <input type="password" name="new_password" placeholder="new password (min 8 chars)"
+           minlength="8" required>
+    <button type="submit">Update password</button>
+  </form>
+</section>
+
+{% if current_user.is_admin %}
+<p><a class="btn-apply" href="/admin">Open admin console →</a></p>
+{% endif %}
+{% endblock %}

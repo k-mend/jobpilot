@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Admin — JobPilot{% endblock %}
+{% block content %}
+<h1>Admin console</h1>
+
+{% if users is none %}
+  <p class="note error">You don't have admin access.</p>
+{% else %}
+<p class="sub">{{ users|length }} registered user(s).</p>
+<table class="admin-table">
+  <thead>
+    <tr><th>Email</th><th>Joined</th><th>Apps</th><th>Status</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.email }}{% if u.is_admin %} <span class="tag">admin</span>{% endif %}</td>
+      <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+      <td>{{ u.applications }}</td>
+      <td>{% if u.is_disabled %}<span class="status status-archived">revoked</span>
+          {% else %}<span class="status status-ready">active</span>{% endif %}</td>
+      <td>
+        {% if u.id != current_user.id %}
+        <form action="/admin/users/{{ u.id }}/revoke" method="post" style="display:inline">
+          <button class="btn-ghost small" type="submit">
+            {{ 'Re-enable' if u.is_disabled else 'Revoke' }}</button>
+        </form>
+        <form action="/admin/users/{{ u.id }}/delete" method="post" style="display:inline"
+              onsubmit="return confirm('Delete {{ u.email }} and all their data? This cannot be undone.');">
+          <button class="btn-ghost small danger" type="submit">Delete</button>
+        </form>
+        {% else %}<span class="hint">(you)</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

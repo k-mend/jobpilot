@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Reset password — JobPilot{% endblock %}
+{% block content %}
+<h1>Set a new password</h1>
+{% if error %}<p class="note error">{{ error }}</p>{% endif %}
+<form class="search" action="/reset-password" method="post">
+  <input type="hidden" name="email" value="{{ email }}">
+  <input type="hidden" name="token" value="{{ token }}">
+  <input type="email" value="{{ email }}" disabled>
+  <input type="password" name="new_password" placeholder="new password (min 8 chars)"
+         minlength="8" required>
+  <button type="submit">Reset password</button>
+</form>
+{% endblock %}

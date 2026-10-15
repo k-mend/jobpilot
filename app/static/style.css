@@ -120,3 +120,13 @@ details summary { cursor: pointer; color: var(--accent); margin: .4rem 0; }
   gap: 1rem; background: var(--panel2); border: 1px solid #2d3358; border-radius: 8px;
   padding: .5rem .8rem; margin-bottom: .5rem; }
 .btn-ghost.small { padding: .3rem .6rem; font-size: .8rem; }
+
+/* --- admin console --- */
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+.admin-table th, .admin-table td {
+  text-align: left; padding: .55rem .6rem; border-bottom: 1px solid #262b4d;
+  font-size: .9rem;
+}
+.admin-table th { color: var(--muted); font-weight: 600; }
+.btn-ghost.danger { border-color: #ff6b6b; color: #ff9b9b; }
+.btn-ghost.danger:hover { background: #3a1f1f; }

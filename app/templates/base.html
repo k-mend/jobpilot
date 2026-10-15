@@ -14,6 +14,8 @@
       <a href="/cv">CV</a>
       <a href="/queue">Queue</a>
       {% if current_user %}
+        <a href="/account">Account</a>
+        {% if current_user.is_admin %}<a href="/admin">Admin</a>{% endif %}
         <span class="navuser">{{ current_user.email }}</span>
         <a href="/logout">Log out</a>
       {% else %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Forgot password — JobPilot{% endblock %}
+{% block content %}
+<h1>Forgot your password?</h1>
+<p class="sub">Enter your email and we'll send a reset link (valid 60 minutes).</p>
+{% if message %}<p class="note">{{ message }}</p>{% endif %}
+<form class="search" action="/forgot-password" method="post">
+  <input type="email" name="email" placeholder="your email" required>
+  <button type="submit">Send reset link</button>
+</form>
+<p class="hint"><a href="/login">← back to login</a></p>
+{% endblock %}

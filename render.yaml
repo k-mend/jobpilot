@@ -25,6 +25,10 @@ services:
       - key: BASE_URL
         sync: false
 
+      # Comma-separated admin emails (view/revoke/delete users). docs/ADMIN.md
+      - key: ADMIN_EMAILS
+        sync: false
+
       # Optional LLM keys (OpenRouter preferred, then Gemini).
       - key: OPENROUTER_API_KEY
         sync: false

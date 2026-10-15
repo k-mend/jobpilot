@@ -125,3 +125,46 @@ def send_test(user_email: str):
         return channel, "sent via smtp" if channel == "email" else "smtp failed"
 
     return "log", "no email provider configured"
+
+
+def _send_raw(to_email: str, subject: str, body: str) -> str:
+    """Send a single email through the configured channel. Returns channel used."""
+    settings = get_settings()
+    if settings.resend_api_key:
+        try:
+            resp = httpx.post(
+                RESEND_URL,
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+                json={"from": settings.resend_from, "to": [to_email],
+                      "subject": subject, "text": body},
+                timeout=30.0,
+            )
+            resp.raise_for_status()
+            return "resend"
+        except Exception as exc:
+            print(f"[notify] resend failed: {exc}")
+    if settings.smtp_enabled:
+        try:
+            msg = MIMEText(body)
+            msg["Subject"] = subject
+            msg["From"] = settings.smtp_from or settings.smtp_user
+            msg["To"] = to_email
+            with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+                server.starttls()
+                server.login(settings.smtp_user, settings.smtp_password)
+                server.send_message(msg)
+            return "email"
+        except Exception as exc:
+            print(f"[notify] smtp failed: {exc}")
+    print(f"[notify] (log only) To:{to_email} Subject:{subject}\n{body}")
+    return "log"
+
+
+def send_reset_email(to_email: str, reset_url: str) -> str:
+    """Email a password-reset link. Returns the channel used."""
+    body = (
+        "You (or someone) requested a password reset for your JobPilot account.\n\n"
+        f"Reset your password here (valid for 60 minutes):\n{reset_url}\n\n"
+        "If you didn't request this, you can ignore this email."
+    )
+    return _send_raw(to_email, "JobPilot: reset your password", body)

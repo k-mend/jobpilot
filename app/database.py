@@ -53,10 +53,49 @@ else:
 
 
 def init_db() -> None:
-    """Create tables. Import models first so they register with SQLModel.metadata."""
+    """Create tables, then additively add any missing columns (lightweight migration).
+
+    SQLModel.create_all() only creates missing *tables*, not new *columns* on tables
+    that already exist. Since the live database predates some columns (e.g. is_admin),
+    we add them with ADD COLUMN IF NOT EXISTS-style statements. This is additive and
+    safe to run on every boot.
+    """
     import app.models  # noqa: F401  (side-effect: registers tables)
 
     SQLModel.metadata.create_all(engine)
+    _add_missing_columns()
+
+
+# (column_name, SQL type, default literal) additions for the `user` table.
+_USER_COLUMN_ADDITIONS = [
+    ("is_admin", "BOOLEAN", "false"),
+    ("is_disabled", "BOOLEAN", "false"),
+    ("is_verified", "BOOLEAN", "false"),
+    ("reset_token_hash", "VARCHAR", "''"),
+    ("reset_expires_at", "TIMESTAMP", None),
+]
+
+
+def _add_missing_columns() -> None:
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    try:
+        existing = {c["name"] for c in inspector.get_columns("user")}
+    except Exception:
+        return  # table not present yet; nothing to migrate
+
+    with engine.begin() as conn:
+        for name, sqltype, default in _USER_COLUMN_ADDITIONS:
+            if name in existing:
+                continue
+            ddl = f'ALTER TABLE "user" ADD COLUMN {name} {sqltype}'
+            if default is not None:
+                ddl += f" DEFAULT {default}"
+            try:
+                conn.execute(text(ddl))
+            except Exception as exc:
+                print(f"[migrate] could not add column {name}: {exc}")
 
 
 def get_session() -> Iterator[Session]:

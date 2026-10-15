@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     # App / auth
     app_secret: str = "change-me"  # also signs the session cookie
     base_url: str = "http://127.0.0.1:8000"
+    # Comma-separated emails that are granted admin on signup/login. The very first
+    # account to sign up also becomes admin automatically (bootstrap).
+    admin_emails: str = ""
+
+    @property
+    def admin_email_list(self) -> List[str]:
+        return [e.strip().lower() for e in self.admin_emails.split(",") if e.strip()]
 
     @field_validator("smtp_port", mode="before")
     @classmethod

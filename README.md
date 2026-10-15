@@ -61,6 +61,13 @@ Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
   for jobs, click by click** (upload CV → search → save → tailor → apply → track). Start
   here if you're a user.
 - [`docs/AUTH.md`](docs/AUTH.md) — **accounts & login** (how it works, setup, caveats).
+- [`docs/PASSWORD_RESET.md`](docs/PASSWORD_RESET.md) — **change/reset password** (how it
+  was built and how to use it).
+- [`docs/ADMIN.md`](docs/ADMIN.md) — **admin console**: see who signed up, revoke/delete.
+- [`docs/CUSTOM_DOMAIN.md`](docs/CUSTOM_DOMAIN.md) — **upgrade to your own domain** to
+  email all your users.
+- [`docs/CAVEATS.md`](docs/CAVEATS.md) — **consolidated known limitations** and how to
+  lift them.
 - [`docs/DATABASE_NEON.md`](docs/DATABASE_NEON.md) — **durable storage with free Neon
   Postgres**, step by step (so your data survives redeploys).
 - [`docs/EMAIL_ALERTS.md`](docs/EMAIL_ALERTS.md) — **daily email alerts via Gmail SMTP**
