@@ -4,6 +4,10 @@
 *(Free Render tier: the first visit after ~15 min idle may take ~30–60s to wake. See
 [`docs/LIVE_APP_GUIDE.md`](docs/LIVE_APP_GUIDE.md).)*
 
+> **👉 Owner, start here:** [`docs/OWNER_SETUP.md`](docs/OWNER_SETUP.md) — your
+> follow-along checklist for the 2 remaining setup actions (make yourself admin, change
+> your password) and everyday use.
+
 A free, multi-user job-scanning + CV-tailoring + application-queue platform.
 Inspired by [hiring.cafe](https://hiringcafe.com/) — but it adds the loop hiring.cafe
 doesn't give you: **describe a job in plain English → get matched real jobs → auto-tailor
@@ -57,6 +61,8 @@ Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Documentation
 
+- [`docs/OWNER_SETUP.md`](docs/OWNER_SETUP.md) — **owner follow-along checklist**: the 2
+  remaining setup actions + everyday use. Start here if you own this deployment.
 - [`docs/APPLY_WORKFLOW.md`](docs/APPLY_WORKFLOW.md) — **how to actually find and apply
   for jobs, click by click** (upload CV → search → save → tailor → apply → track). Start
   here if you're a user.
